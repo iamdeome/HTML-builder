@@ -103,4 +103,5 @@ dist
 # TernJS port file
 .tern-port
 
-02-write-file/text.txt
+.02-write-file/text.txt
+.04-copy-directory/*
