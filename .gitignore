@@ -105,3 +105,4 @@ dist
 
 .02-write-file/text.txt
 .04-copy-directory/*
+.05-merge-styles/project-dist
