@@ -14,10 +14,17 @@ console.log('This is my console line, please, enter something or press "ctrl + c
 
 rlInterface.on('line', (input) => {
     if (input.toLowerCase() === 'exit') {
-        console.log();
-        writeStr.end();
-        rlInterface.close();
+        stopWriting();
     } else {
         writeStr.write(`${input}\n`);
     }
 });
+
+const stopWriting = () => {
+    console.log("You want to exit, so will it be. Goodbye!");
+    writeStr.end();
+    rlInterface.close();
+}
+
+
+rlInterface.on('SIGINT', stopWriting);
