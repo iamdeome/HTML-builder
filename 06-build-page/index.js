@@ -1,4 +1,4 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 
 const templatePath = path.join(__dirname, 'template.html');
@@ -6,32 +6,33 @@ const componentsFolder = path.join(__dirname, 'components');
 const styles = path.join(__dirname, 'styles');
 const assetsFolder = path.join(__dirname, 'assets');
 
-const templateContent = fs.readFileSync(templatePath, 'utf-8');
+const templateContent = async () => await fs.readFile(templatePath, 'utf-8');
 
 const outputFolder = path.join(__dirname, 'project-dist');
 const outputIndexPath = path.join(outputFolder, 'index.html');
 const outputStyleFile = path.join(outputFolder, 'style.css');
 const outputAssetsPath = path.join(outputFolder, 'assets');
 
-const createNewDir = () => {
+const createNewDir = async () => {
     console.log('Starting the operation...');
     console.log('Creating new directory...');
-    fs.mkdirSync(outputFolder, { recursive: true });
+    await fs.mkdir(outputFolder, { recursive: true });
     console.log('Directory created!');
 
-    const updatedContent = removeHTMLTemplates(templateContent, componentsFolder);
-    fs.writeFileSync(outputIndexPath, updatedContent, 'utf-8');
+    const updatedContent = await removeHTMLTemplates(await templateContent(), componentsFolder);
+    await fs.writeFile(outputIndexPath, updatedContent, 'utf-8');
 
-    buildCssBundle();
+    await buildCssBundle();
+
     console.log('Copying assets...');
-    copyDir(assetsFolder, outputAssetsPath);
+    await copyDir(assetsFolder, outputAssetsPath);
     console.log('Assets copied');
     console.log('Buying cookies...');
     console.log('Making tee...');
     console.log('Done!');
 };
 
-const removeHTMLTemplates = (content, componentsFolder) => {
+const removeHTMLTemplates = async (content, componentsFolder) => {
     console.log('Removing HTML templates...');
 
     let result = content;
@@ -44,10 +45,10 @@ const removeHTMLTemplates = (content, componentsFolder) => {
             const tag = result.substring(startIndex + 2, endIndex);
             const componentFilePath = path.join(componentsFolder, `${tag}.html`);
 
-            if (fs.existsSync(componentFilePath)) {
-                const componentContent = fs.readFileSync(componentFilePath, 'utf-8');
+            try {
+                const componentContent = await fs.readFile(componentFilePath, 'utf-8');
                 result = result.slice(0, startIndex) + componentContent + result.slice(endIndex + 2);
-            } else {
+            } catch (error) {
                 console.warn(`Component file not found: ${componentFilePath}`);
             }
         } else {
@@ -61,40 +62,43 @@ const removeHTMLTemplates = (content, componentsFolder) => {
 };
 
 
-const buildCssBundle = () => {
+const buildCssBundle = async () => {
     console.log('Creating styles bundle...');
     
     const stylesArray = [];
-     const files = fs.readdirSync(styles);
+    const files = await fs.readdir(styles);
 
-    files.forEach(file => {
+    await Promise.all(files.map(async (file) => {
         const filePath = path.join(styles, file);
-        const cssFile = file => path.extname(file) === '.css';
-        if (fs.statSync(filePath).isFile() && cssFile(file)) {
-            const content = fs.readFileSync(filePath, 'utf-8');
+        const cssFile = (file) => path.extname(file) === '.css';
+
+        if ((await fs.stat(filePath)).isFile() && cssFile(file)) {
+            const content = await fs.readFile(filePath, 'utf-8');
             stylesArray.push(content);
         }
-    });
+    }));
+
     const cont = stylesArray.join('\n');
-    fs.writeFileSync(outputStyleFile, cont, 'utf-8');
+    await fs.writeFile(outputStyleFile, cont, 'utf-8');
 
     console.log('Styles bundle created!');
 };
 
-const copyDir = (assetsFolder, outputAssetsPath) => {
-    fs.mkdirSync(outputAssetsPath, { recursive: true });
+const copyDir = async (assetsFolder, outputAssetsPath) => {
+    await fs.mkdir(outputAssetsPath, { recursive: true });
     
-    const files = fs.readdirSync(assetsFolder);
+    const files = await fs.readdir(assetsFolder);
 
-    files.forEach(file => {
+    await Promise.all(files.map(async (file) => {
         const sourcePath = path.join(assetsFolder, file);
         const destPath = path.join(outputAssetsPath, file);
 
-        if (fs.statSync(sourcePath).isFile()) {
-            fs.copyFileSync(sourcePath, destPath);
-        } else if (fs.statSync(sourcePath).isDirectory()) {
-            copyDir(sourcePath, destPath);
+        if ((await fs.stat(sourcePath)).isFile()) {
+            await fs.copyFile(sourcePath, destPath);
+        } else if ((await fs.stat(sourcePath)).isDirectory()) {
+            await copyDir(sourcePath, destPath);
         }
-    });
+    }));
 }
+
 createNewDir();
