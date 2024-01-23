@@ -108,3 +108,5 @@ dist
 .05-merge-styles/project-dist/*
 .06-build-page/project-dist
 .06-build-page/project-dist/*
+06-build-page/project-dist
+06-build-page/project-dist/*
