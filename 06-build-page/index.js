@@ -3,19 +3,15 @@ const path = require('path');
 
 const templatePath = path.join(__dirname, 'template.html');
 const componentsFolder = path.join(__dirname, 'components');
-
 const styles = path.join(__dirname, 'styles');
 const assetsFolder = path.join(__dirname, 'assets');
 
-const outputFolder = path.join(__dirname, 'project-dist');
-const outputIndexPath = path.join(outputFolder, 'index.html');
-
-const outputStyleFile = path.join(outputFolder, 'style.css');
-
-const template = fs.readFileSync(templatePath, 'utf-8');
 const templateContent = fs.readFileSync(templatePath, 'utf-8');
 
-
+const outputFolder = path.join(__dirname, 'project-dist');
+const outputIndexPath = path.join(outputFolder, 'index.html');
+const outputStyleFile = path.join(outputFolder, 'style.css');
+const outputAssetsPath = path.join(outputFolder, 'assets');
 
 const createNewDir = () => {
     console.log('Starting the operation...');
@@ -25,9 +21,14 @@ const createNewDir = () => {
 
     const updatedContent = removeHTMLTemplates(templateContent, componentsFolder);
     fs.writeFileSync(outputIndexPath, updatedContent, 'utf-8');
-    buildCssBundle();
 
-    
+    buildCssBundle();
+    console.log('Copying assets...');
+    copyDir(assetsFolder, outputAssetsPath);
+    console.log('Assets copied');
+    console.log('Buying cookies...');
+    console.log('Making tee...');
+    console.log('Done!');
 };
 
 const removeHTMLTemplates = (content, componentsFolder) => {
@@ -80,4 +81,20 @@ const buildCssBundle = () => {
     console.log('Styles bundle created!');
 };
 
+const copyDir = (assetsFolder, outputAssetsPath) => {
+    fs.mkdirSync(outputAssetsPath, { recursive: true });
+    
+    const files = fs.readdirSync(assetsFolder);
+
+    files.forEach(file => {
+        const sourcePath = path.join(assetsFolder, file);
+        const destPath = path.join(outputAssetsPath, file);
+
+        if (fs.statSync(sourcePath).isFile()) {
+            fs.copyFileSync(sourcePath, destPath);
+        } else if (fs.statSync(sourcePath).isDirectory()) {
+            copyDir(sourcePath, destPath);
+        }
+    });
+}
 createNewDir();
