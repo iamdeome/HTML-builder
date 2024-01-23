@@ -1,4 +1,4 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 
 const styles = path.join(__dirname, 'styles');
@@ -6,23 +6,26 @@ const styles = path.join(__dirname, 'styles');
 const outputFolder = path.join(__dirname, 'project-dist');
 const outputFile = path.join(outputFolder, 'bundle.css');
 
-const buildBundle = () => {
-    const stylesArray = [];
-     const files = fs.readdirSync(styles);
+const buildBundle = async () => {
+    try {
+        const stylesArray = [];
+        const files = await fs.readdir(styles);
 
-    files.forEach(file => {
-        const filePath = path.join(styles, file);
-        const cssFile = file => path.extname(file) === '.css';
-        if (fs.statSync(filePath).isFile() && cssFile(file)) {
-            const content = fs.readFileSync(filePath, 'utf-8');
-            stylesArray.push(content);
-        }
-    });
-    const cont = stylesArray.join('\n');
-    fs.writeFileSync(outputFile, cont, 'utf-8');
+        await Promise.all(files.map(async (file) => {
+            const filePath = path.join(styles, file);
+            const cssFile = (file) => path.extname(file) === '.css';
+            if ((await fs.stat(filePath)).isFile() && cssFile(file)) {
+                const content = await fs.readFile(filePath, 'utf-8');
+                stylesArray.push(content);
+            }
+        }));
+        const cont = stylesArray.join('\n');
+        await fs.writeFile(outputFile, cont, 'utf-8');
 
-    console.log('Styles bundled successfully!');
-
+        console.log('bundled successfully!');
+    } catch (error) {
+        console.error('Error:', error);
+    }
 };
 
 buildBundle(); 
