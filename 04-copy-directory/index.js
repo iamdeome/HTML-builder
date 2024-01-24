@@ -5,8 +5,9 @@ const pathFolder = path.join(__dirname, 'files');
 const folderCopyDirrectory = path.join(__dirname, 'files-copy');
 
 
-const copyDir = () => {
-    fs.mkdirSync(folderCopyDirrectory, { recursive: true });
+const copyDir = async() => {
+    fs.rm(folderCopyDirrectory, { recursive: true, force: true });
+    fs.mkdir(folderCopyDirrectory, { recursive: true });
     const files = fs.readdirSync(pathFolder);
     files.forEach(file => {
         const sourcePath = path.join(pathFolder, file);
